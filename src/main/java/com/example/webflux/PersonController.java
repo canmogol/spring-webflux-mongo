@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.time.Duration;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Random;
 
 /**
  * Created by Can.Mogol on 12/4/2017.
@@ -31,11 +33,27 @@ public class PersonController {
             "var es = new EventSource(\"/stream/event\");\n" +
             "\n" +
             "es.onmessage = function(e) {\n" +
-            "   var div = document.createElement(\"div\");\n" +
-            "   div.innerText = e.data;\n" +
-            "   document.getElementsByTagName('body')[0].appendChild(div);\n" +
+            "\tvar div = document.createElement(\"div\");\n" +
+            "\tvar person = JSON.parse(e.data);\n" +
+            "\tvar index = Number(person.id);\n" +
+            "\tvar row = document.getElementById('tr'+index);\n" +
+            "\tif(row === null){\n" +
+            "\t\tvar tr = document.createElement('tr');\n" +
+            "\t\ttr.id = 'tr'+index;\n" +
+            "\t\tvar td = document.createElement('td');\t\n" +
+            "\t\ttd.id = 'td'+index;\n" +
+            "\t\ttd.innerText = e.data;\n" +
+            "\t\ttr.appendChild(td);\n" +
+            "\t\tvar table = document.getElementById('personTable');\n" +
+            "\t\ttable.appendChild(tr);\n" +
+            "\t}else{\n" +
+            "\t\tvar td = document.getElementById('td'+index);\n" +
+            "\t\ttd.innerText = e.data;\n" +
+            "\t}\n" +
             "}" +
             "</script>" +
+            "<table id='personTable'>" +
+            "</table>" +
             "</body>" +
             "</html>" +
             "";
@@ -62,12 +80,15 @@ public class PersonController {
     }
 
     @GetMapping(path = "/stream/event", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Flux<HashMap> streamGenericStream() {
+    Flux<PersonEntity> streamGenericStream() {
+        final Random random = new Random();
         return Flux
             .interval(Duration.ofMillis(1000))
-            .map(tick -> new HashMap<String, Long>() {{
-                put(String.valueOf(tick), tick);
-            }});
+            .map(tick -> {
+                final long nextLong = random.nextLong();
+                Long id = Math.abs(nextLong % 5);
+                return new PersonEntity(String.valueOf(id), String.valueOf(nextLong), new Date());
+            });
     }
 
     @GetMapping("/person/{id}")

@@ -24,6 +24,15 @@ public class PersonEntity {
     @NotNull
     private Date createdAt = new Date();
 
+    public PersonEntity() {
+    }
+
+    public PersonEntity(String id, @NotBlank @Size(max = 50, min = 2) String name, @NotNull Date createdAt) {
+        this.id = id;
+        this.name = name;
+        this.createdAt = createdAt;
+    }
+
     public String getId() {
         return id;
     }
